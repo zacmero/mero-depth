@@ -117,6 +117,31 @@ cmd \
 cmd \ next-arg
 ```
 
+## Upscayl add-on
+
+Upscayl source is vendored in:
+
+```bash
+repo/upscayl
+```
+
+CLI upscale wrapper:
+
+```bash
+cd ~/projects/depthflow/repo/upscayl
+./mero-upscale.sh "/path/to/input.png" "/path/to/output-4x.png"
+```
+
+Upscayl also has an Electron desktop UI:
+
+```bash
+cd ~/projects/depthflow/repo/upscayl
+npm install
+npm run dev
+```
+
+See `repo/upscayl/README.md` for local usage.
+
 ## Git layout
 
 Git is initialized at this root folder:

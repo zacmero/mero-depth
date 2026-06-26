@@ -23,6 +23,12 @@
 - Patched render mode: when `--output` is used, `show_ui=False`, so sliders are not drawn into MP4.
 - Reinstalled editable package; confirmed `.venv/bin/depthflow-ui` exists.
 - Tested render without UI overlay path: `/tmp/depthflow-no-ui-test.mp4` created successfully.
+- Added Upscayl under `repo/upscayl` from `https://github.com/upscayl/upscayl` with nested `.git` removed.
+- Confirmed Upscayl offers Electron desktop UI (`npm install`, `npm run dev`).
+- Confirmed bundled Linux CLI binary works: `resources/linux/bin/upscayl-bin`.
+- Added local wrapper `repo/upscayl/mero-upscale.sh`.
+- Tested wrapper on bundled sample: `to_upscale.jpeg` -> `/tmp/upscayl-wrapper-test.png` at 512x512.
+- Prepended local usage docs to `repo/upscayl/README.md` and added root README Upscayl section.
 - Staged repo changes in git: `.gitignore`, `pyproject.toml`, `depthflow/examples/__init__.py`, `depthflow/examples/interactive.py`.
 - User requested root git instead of nested repo git.
 - Removed `repo/.git` and initialized git at `~/projects/depthflow` root.

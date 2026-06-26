@@ -73,6 +73,15 @@ npm install
 npm run dev
 ```
 
+Local maintenance note: Electron is pinned to `33.4.11` because npm tried to resolve a future unavailable Electron release. If Electron reports a missing binary, run:
+
+```bash
+cd ~/projects/depthflow/repo/upscayl
+npm rebuild electron
+```
+
+Firebase cloud credentials are intentionally removed from source. Use `.env` from `.env.example` only if cloud/waitlist features are needed.
+
 For long-term reproducibility, prefer the CLI wrapper for automated upscale jobs and use the Electron UI only when manually comparing settings.
 
 ## Tested locally

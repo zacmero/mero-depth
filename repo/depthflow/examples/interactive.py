@@ -1,4 +1,5 @@
 import math
+import shlex
 from pathlib import Path
 from typing import Annotated, Optional
 
@@ -8,14 +9,50 @@ from imgui_bundle import imgui
 
 from depthflow.scene import DepthScene
 
+COMMAND_FILE = Path("/tmp/depthflow-render-command.sh")
+
 
 @define
 class InteractiveScene(DepthScene):
+    image_path: Path | None = None
+    output_path: Path | None = None
     animate: bool = True
     show_ui: bool = True
     motion_x: float = 0.4
     motion_y: float = 0.0
-    speed: float = 1.0
+    loops: int = 1
+    render_time: float = 5.0
+    render_width: int = 1920
+    render_height: int = 1080
+
+    def render_command(self) -> str:
+        output = self.output_path or (self.image_path.parent / "depthflow-render.mp4")
+        args = [
+            ".venv/bin/depthflow-ui",
+            "-i", str(self.image_path),
+            "-o", str(output),
+            "-t", f"{self.render_time:g}",
+            "-w", str(self.render_width),
+            "-h", str(self.render_height),
+            "--quality", f"{self.quality:g}",
+            "--height-effect", f"{self.state.height:g}",
+            "--steady", f"{self.state.steady:g}",
+            "--focus", f"{self.state.focus:g}",
+            "--zoom", f"{self.state.zoom:g}",
+            "--isometric", f"{self.state.isometric:g}",
+            "--dolly", f"{self.state.dolly:g}",
+            "--motion-x", f"{self.motion_x:g}",
+            "--motion-y", f"{self.motion_y:g}",
+            "--loops", str(self.loops),
+        ]
+        if not self.state.sticky:
+            args.append("--no-sticky")
+        return "cd ~/projects/depthflow && \\\n  " + " \\\n  ".join(shlex.quote(x) for x in args) + "\n"
+
+    def write_render_command(self):
+        if self.image_path:
+            COMMAND_FILE.write_text("#!/usr/bin/env bash\nset -e\n" + self.render_command())
+            COMMAND_FILE.chmod(0o755)
 
     def _render_ui(self):
         imgui.push_style_var(imgui.StyleVar_.window_border_size, 0.0)
@@ -30,7 +67,8 @@ class InteractiveScene(DepthScene):
         imgui.begin("Parameters", False, imgui.WindowFlags_.always_auto_resize)
 
         _, self.animate = imgui.checkbox("Animate", self.animate)
-        _, self.speed = imgui.slider_float("Speed", self.speed, 0, 4, "%.2f")
+        _, loops = imgui.slider_int("Loops", self.loops, 1, 8)
+        self.loops = loops
         _, self.motion_x = imgui.slider_float("Motion X", self.motion_x, -2, 2, "%.2f")
         _, self.motion_y = imgui.slider_float("Motion Y", self.motion_y, -2, 2, "%.2f")
 
@@ -55,7 +93,11 @@ class InteractiveScene(DepthScene):
         self.state.origin = (rx, ry)
         self.state.center = (cx, cy)
 
-        imgui.text("Render uses current CLI args, not live GUI tweaks yet.")
+        self.write_render_command()
+        imgui.separator()
+        imgui.text(f"Render script: {COMMAND_FILE}")
+        if imgui.button("Print render command"):
+            print("\n" + self.render_command(), flush=True)
         imgui.end()
         imgui.pop_style_color()
         imgui.pop_style_var(4)
@@ -65,21 +107,14 @@ class InteractiveScene(DepthScene):
 
     def update(self):
         if not getattr(self, "_ui_ready", False):
-            self.state.height = 0.3
-            self.state.steady = 0.15
-            self.state.focus = 0.0
-            self.state.zoom = 1.0
-            self.state.isometric = 0.6
-            self.state.dolly = 0.0
-            self.state.offset = (0.0, 0.0)
-            self.state.center = (0.0, 0.0)
-            self.state.origin = (0.0, 0.0)
             self._ui_ready = True
 
         if self.show_ui:
             self._render_ui()
         if self.animate:
-            t = self.cycle * self.speed
+            # self.cycle is one full 0..tau period over the exported duration.
+            # Integer loops makes frame 0 and final frame meet cleanly.
+            t = self.cycle * self.loops
             self.state.offset = (self.motion_x * math.sin(t), self.motion_y * math.cos(t))
 
 
@@ -91,14 +126,38 @@ def run(
     width: Annotated[int, Parameter(name=("--width", "-w"))] = 1920,
     height: Annotated[int, Parameter(name=("--height", "-h"))] = 1080,
     quality: Annotated[float, Parameter(name=("--quality", "-q"))] = 80.0,
+    state_height: Annotated[float, Parameter(name="--height-effect")] = 0.3,
+    steady: Annotated[float, Parameter(name="--steady")] = 0.15,
+    focus: Annotated[float, Parameter(name="--focus")] = 0.0,
+    zoom: Annotated[float, Parameter(name="--zoom")] = 1.0,
+    isometric: Annotated[float, Parameter(name="--isometric")] = 0.6,
+    dolly: Annotated[float, Parameter(name="--dolly")] = 0.0,
+    sticky: Annotated[bool, Parameter(negative="--no-sticky")] = True,
     motion_x: Annotated[float, Parameter(name="--motion-x")] = 0.4,
     motion_y: Annotated[float, Parameter(name="--motion-y")] = 0.0,
-    speed: Annotated[float, Parameter(name="--speed")] = 1.0,
+    loops: Annotated[int, Parameter(name="--loops")] = 1,
 ):
-    scene = InteractiveScene(motion_x=motion_x, motion_y=motion_y, speed=speed)
+    scene = InteractiveScene(
+        image_path=image,
+        output_path=output,
+        show_ui=(output is None),
+        motion_x=motion_x,
+        motion_y=motion_y,
+        loops=loops,
+        render_time=time,
+        render_width=width,
+        render_height=height,
+    )
+    scene.quality = quality
+    scene.state.height = state_height
+    scene.state.steady = steady
+    scene.state.focus = focus
+    scene.state.zoom = zoom
+    scene.state.isometric = isometric
+    scene.state.dolly = dolly
+    scene.state.sticky = sticky
     scene.input(image=image, depth=depth)
     if output:
-        scene.show_ui = False
         scene.main(output=output, time=time, width=width, height=height, quality=quality)
     else:
         scene.main(width=width, height=height, quality=quality)

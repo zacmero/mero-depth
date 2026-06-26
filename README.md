@@ -4,32 +4,26 @@ This folder is a maintained local DepthFlow setup.
 
 - Source lives in `repo/`.
 - The Python environment lives in `.venv/` and is ignored by git.
-- The venv is installed in editable mode from `repo/`, so changes in `repo/` are used by commands immediately after reinstalling.
+- The venv is installed in editable mode from `repo/`.
 
-## Why venv, not global
-
-Keep this in the venv. It is easier to reproduce on a VM and avoids global Python/GPU dependency mess.
-
-Reinstall editable package after source changes:
+## Reinstall after source changes
 
 ```bash
 cd ~/projects/depthflow
 uv pip install -e repo --python .venv/bin/python
 ```
 
+Keep this in a venv, not global Python. It is easier to reproduce later on a VM and avoids global GPU/Python dependency mess.
+
 ## What DepthFlow does
 
-DepthFlow takes an input image, estimates or loads a depth map, then renders a 3D parallax effect through an OpenGL shader. For exported videos it pipes frames to FFmpeg.
-
-Flow:
-
 ```text
-image -> DepthAnythingV2 depth estimate -> OpenGL DepthFlow shader -> live GLFW window or FFmpeg MP4
+image -> DepthAnythingV2 depth estimate -> OpenGL DepthFlow shader -> live GLFW preview or FFmpeg MP4
 ```
 
-## Live interactive UI
+DepthFlow turns one image plus a depth map into 3D parallax motion. If no depth map is provided, it estimates one with DepthAnythingV2.
 
-Use our added UI command:
+## Live interactive UI
 
 ```bash
 cd ~/projects/depthflow
@@ -40,18 +34,27 @@ cd ~/projects/depthflow
 
 Controls:
 
-- `Animate`: toggles live motion.
-- `Speed`: animation speed.
+- `Animate`: toggle live motion.
+- `Loops`: integer loop count. Use whole numbers so the end frame returns to the start frame.
 - `Motion X` / `Motion Y`: parallax motion amount.
+- `Quality`: preview/render shader quality.
 - `Height`, `Steady`, `Focus`, `Zoom`, `Isometric`, `Dolly`: DepthFlow shader parameters.
 
-The plain built-in command below only opens a basic scene and does not include our fader UI:
+The UI writes the current settings to this shell script every frame:
 
 ```bash
-depthflow input IMAGE main
+/tmp/depthflow-render-command.sh
 ```
 
-## Render clean MP4
+After tuning the UI, render the exact current settings with:
+
+```bash
+bash /tmp/depthflow-render-command.sh
+```
+
+You can also click `Print render command` in the UI and copy it from the terminal.
+
+## Render clean looped MP4
 
 This renders without drawing the sliders into the video:
 
@@ -65,17 +68,41 @@ cd ~/projects/depthflow
   -w 1920 \
   -h 1080 \
   --quality 80 \
+  --height-effect 0.3 \
+  --steady 0.15 \
+  --focus 0 \
+  --zoom 1 \
+  --isometric 0.6 \
+  --dolly 0 \
   --motion-x 0.4 \
   --motion-y 0.2 \
-  --speed 1.0
+  --loops 1
 ```
+
+Looping rule:
+
+- `--loops 1` = one complete cycle over `-t` seconds.
+- `--loops 2` = two complete cycles over `-t` seconds.
+- Keep `--loops` as an integer. Integer loops close cleanly because the animation uses sine/cosine over DepthFlow's full scene cycle.
 
 Notes:
 
 - `-t` is video duration in seconds.
 - `-w` / `-h` are output resolution.
-- `--quality` is the DepthFlow global render quality, not codec CRF.
+- `--height-effect` is the parallax height/intensity.
+- `-h` is output video height. Do not confuse it with `--height-effect`.
+- `--quality` is the DepthFlow shader quality, not codec CRF.
 - When `-o/--output` is used, the UI overlay is disabled automatically.
+
+## Plain built-in command
+
+The upstream command opens a basic scene but does not include our fader UI:
+
+```bash
+depthflow input IMAGE main
+```
+
+Use `depthflow-ui` instead.
 
 ## Common shell mistake
 
@@ -86,11 +113,9 @@ Line continuation must be a bare backslash at the end of a line:
 cmd \
   next-arg
 
-# bad: this escapes a space and breaks command parsing
+# bad
 cmd \ next-arg
 ```
-
-The earlier `Unknown option: --height` happened because `state` was not parsed as a subcommand after a bad backslash.
 
 ## Git layout
 
@@ -100,17 +125,6 @@ Git is initialized at this root folder:
 ~/projects/depthflow
 ```
 
-The nested `repo/.git` was removed so root git can track the source files directly.
-
-Important changed files:
-
-```text
-repo/pyproject.toml
-repo/depthflow/examples/__init__.py
-repo/depthflow/examples/interactive.py
-repo/.gitignore
-README.md
-.gitignore
-```
+The nested `repo/.git` was removed so root git tracks the source files directly.
 
 No commits are made by the agent. User commits manually.

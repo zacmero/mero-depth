@@ -13,14 +13,22 @@ COMMAND_FILE = Path("/tmp/depthflow-render-command.sh")
 
 
 @define
-class InteractiveScene(DepthScene):
+class RenderScene(DepthScene):
+    motion_x: float = 0.0
+    motion_y: float = -0.46
+    loops: int = 1
+
+    def update(self):
+        t = self.cycle * self.loops
+        self.state.offset = (self.motion_x * math.sin(t), self.motion_y * math.cos(t))
+
+
+@define
+class InteractiveScene(RenderScene):
     image_path: Path | None = None
     output_path: Path | None = None
     animate: bool = True
     show_ui: bool = True
-    motion_x: float = 0.0
-    motion_y: float = -0.46
-    loops: int = 1
     render_time: float = 5.0
     render_width: int = 1920
     render_height: int = 1080
@@ -112,10 +120,7 @@ class InteractiveScene(DepthScene):
         if self.show_ui:
             self._render_ui()
         if self.animate:
-            # self.cycle is one full 0..tau period over the exported duration.
-            # Integer loops makes frame 0 and final frame meet cleanly.
-            t = self.cycle * self.loops
-            self.state.offset = (self.motion_x * math.sin(t), self.motion_y * math.cos(t))
+            RenderScene.update(self)
 
 
 def run(
@@ -137,17 +142,19 @@ def run(
     motion_y: Annotated[float, Parameter(name="--motion-y")] = -0.46,
     loops: Annotated[int, Parameter(name="--loops")] = 1,
 ):
-    scene = InteractiveScene(
-        image_path=image,
-        output_path=output,
-        show_ui=(output is None),
-        motion_x=motion_x,
-        motion_y=motion_y,
-        loops=loops,
-        render_time=time,
-        render_width=width,
-        render_height=height,
-    )
+    if output:
+        scene = RenderScene(backend="headless", motion_x=motion_x, motion_y=motion_y, loops=loops)
+    else:
+        scene = InteractiveScene(
+            image_path=image,
+            output_path=output,
+            motion_x=motion_x,
+            motion_y=motion_y,
+            loops=loops,
+            render_time=time,
+            render_width=width,
+            render_height=height,
+        )
     scene.quality = quality
     scene.state.height = state_height
     scene.state.steady = steady

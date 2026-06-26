@@ -68,14 +68,14 @@ cd ~/projects/depthflow
   -w 1920 \
   -h 1080 \
   --quality 80 \
-  --height-effect 0.3 \
+  --height-effect 0.19 \
   --steady 0.15 \
   --focus 0 \
   --zoom 1 \
-  --isometric 0.6 \
-  --dolly 0 \
-  --motion-x 0.4 \
-  --motion-y 0.2 \
+  --isometric 0.58 \
+  --dolly 1.51 \
+  --motion-x 0 \
+  --motion-y -0.46 \
   --loops 1
 ```
 

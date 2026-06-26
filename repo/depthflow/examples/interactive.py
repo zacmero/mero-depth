@@ -18,8 +18,8 @@ class InteractiveScene(DepthScene):
     output_path: Path | None = None
     animate: bool = True
     show_ui: bool = True
-    motion_x: float = 0.4
-    motion_y: float = 0.0
+    motion_x: float = 0.0
+    motion_y: float = -0.46
     loops: int = 1
     render_time: float = 5.0
     render_width: int = 1920
@@ -126,15 +126,15 @@ def run(
     width: Annotated[int, Parameter(name=("--width", "-w"))] = 1920,
     height: Annotated[int, Parameter(name=("--height", "-h"))] = 1080,
     quality: Annotated[float, Parameter(name=("--quality", "-q"))] = 80.0,
-    state_height: Annotated[float, Parameter(name="--height-effect")] = 0.3,
+    state_height: Annotated[float, Parameter(name="--height-effect")] = 0.19,
     steady: Annotated[float, Parameter(name="--steady")] = 0.15,
     focus: Annotated[float, Parameter(name="--focus")] = 0.0,
     zoom: Annotated[float, Parameter(name="--zoom")] = 1.0,
-    isometric: Annotated[float, Parameter(name="--isometric")] = 0.6,
-    dolly: Annotated[float, Parameter(name="--dolly")] = 0.0,
+    isometric: Annotated[float, Parameter(name="--isometric")] = 0.58,
+    dolly: Annotated[float, Parameter(name="--dolly")] = 1.51,
     sticky: Annotated[bool, Parameter(negative="--no-sticky")] = True,
-    motion_x: Annotated[float, Parameter(name="--motion-x")] = 0.4,
-    motion_y: Annotated[float, Parameter(name="--motion-y")] = 0.0,
+    motion_x: Annotated[float, Parameter(name="--motion-x")] = 0.0,
+    motion_y: Annotated[float, Parameter(name="--motion-y")] = -0.46,
     loops: Annotated[int, Parameter(name="--loops")] = 1,
 ):
     scene = InteractiveScene(

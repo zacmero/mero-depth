@@ -130,7 +130,7 @@ def run(
     time: Annotated[float, Parameter(name=("--time", "-t"))] = 5.0,
     width: Annotated[int, Parameter(name=("--width", "-w"))] = 1920,
     height: Annotated[int, Parameter(name=("--height", "-h"))] = 1080,
-    quality: Annotated[float, Parameter(name=("--quality", "-q"))] = 80.0,
+    quality: Annotated[float, Parameter(name=("--quality", "-q"))] = 100.0,
     state_height: Annotated[float, Parameter(name="--height-effect")] = 0.19,
     steady: Annotated[float, Parameter(name="--steady")] = 0.15,
     focus: Annotated[float, Parameter(name="--focus")] = 0.0,

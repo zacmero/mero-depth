@@ -1,0 +1,30 @@
+# Progress
+
+## 2026-06-26
+- Cloned DepthFlow source to `repo/`.
+- Created `repo/depthflow/examples/interactive.py` to launch an ImGui slider UI.
+- Installed repo editable into `.venv` using uv.
+- Confirmed window title `ShaderFlow • InteractiveScene` launches.
+- Fixed first slider snap-back bug by assigning ImGui slider return values.
+- New task: add live motion, fix mouse mismatch, and provide working render command.
+- Patched `repo/depthflow/examples/interactive.py`:
+  - removed forced UI scaling that caused mouse hitbox mismatch
+  - added Animate, Speed, Motion X, Motion Y controls
+  - added render args: `--output`, `--time`, `--width`, `--height`, `--quality`, `--motion-x`, `--motion-y`, `--speed`
+- Reinstalled editable package into `.venv`.
+- Tested render: `/tmp/depthflow-interactive-test.mp4` created successfully.
+- Tested live UI launch: window title `ShaderFlow • InteractiveScene` appears.
+- Organized repo:
+  - removed duplicate clean clone `repo_temp/`
+  - removed accidental `repo/examples/interactive.py`
+  - removed `__pycache__` dirs
+  - added `.gitignore` rules for Python cache files
+- Added console script `depthflow-ui` in `pyproject.toml`.
+- Patched render mode: when `--output` is used, `show_ui=False`, so sliders are not drawn into MP4.
+- Reinstalled editable package; confirmed `.venv/bin/depthflow-ui` exists.
+- Tested render without UI overlay path: `/tmp/depthflow-no-ui-test.mp4` created successfully.
+- Staged repo changes in git: `.gitignore`, `pyproject.toml`, `depthflow/examples/__init__.py`, `depthflow/examples/interactive.py`.
+- User requested root git instead of nested repo git.
+- Removed `repo/.git` and initialized git at `~/projects/depthflow` root.
+- Added root `.gitignore` ignoring `.venv/`, `.serena/`, caches, logs, `imgui.ini`.
+- Added root `README.md` documenting live UI, render command, venv/editable setup, DepthFlow flow, and shell backslash gotcha.
